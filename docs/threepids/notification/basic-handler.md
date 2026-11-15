@@ -15,6 +15,8 @@ This handler can be used with the 3PID types:
 - SMS
   - [Twilio](../medium/msisdn/twilio-connector.md)
   - [websms](../medium/msisdn/websms-connector.md)
+  - [smstools](../medium/msisdn/smstools-connector.md)
+  - [Gotify](../medium/msisdn/gotify-connector.md)
 
 ## Configuration
 Enabled by default or with:

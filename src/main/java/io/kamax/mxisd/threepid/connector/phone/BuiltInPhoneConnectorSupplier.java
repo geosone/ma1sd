@@ -23,6 +23,8 @@ package io.kamax.mxisd.threepid.connector.phone;
 import com.google.gson.JsonObject;
 import io.kamax.matrix.json.GsonUtil;
 import io.kamax.mxisd.Mxisd;
+import io.kamax.mxisd.config.threepid.connector.PhoneGotifyConfig;
+import io.kamax.mxisd.config.threepid.connector.PhoneSmstoolsConfig;
 import io.kamax.mxisd.config.threepid.connector.PhoneTwilioConfig;
 import io.kamax.mxisd.config.threepid.connector.PhoneWebsmsConfig;
 import io.kamax.mxisd.config.threepid.medium.PhoneConfig;
@@ -46,6 +48,16 @@ public class BuiltInPhoneConnectorSupplier implements PhoneConnectorSupplier {
         if (StringUtils.equals(PhoneSmsWebsmsConnector.ID, cfg.getConnector())) {
             PhoneWebsmsConfig cCfg = GsonUtil.get().fromJson(cfg.getConnectors().getOrDefault(PhoneSmsWebsmsConnector.ID, new JsonObject()), PhoneWebsmsConfig.class);
             return Optional.of(new PhoneSmsWebsmsConnector(cCfg));
+        }
+
+        if (StringUtils.equals(PhoneSmsSmstoolsConnector.ID, cfg.getConnector())) {
+            PhoneSmstoolsConfig cCfg = GsonUtil.get().fromJson(cfg.getConnectors().getOrDefault(PhoneSmsSmstoolsConnector.ID, new JsonObject()), PhoneSmstoolsConfig.class);
+            return Optional.of(new PhoneSmsSmstoolsConnector(cCfg));
+        }
+
+        if (StringUtils.equals(PhoneGotifyConnector.ID, cfg.getConnector())) {
+            PhoneGotifyConfig cCfg = GsonUtil.get().fromJson(cfg.getConnectors().getOrDefault(PhoneGotifyConnector.ID, new JsonObject()), PhoneGotifyConfig.class);
+            return Optional.of(new PhoneGotifyConnector(cCfg));
         }
 
         return Optional.empty();
