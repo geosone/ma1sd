@@ -87,6 +87,7 @@ Generators:
 
 Connectors:
  - [Twilio](../medium/msisdn/twilio-connector.md) with SMS
+ - [websms](../medium/msisdn/websms-connector.md) with SMS
 
 ## Usage
 ### Configuration

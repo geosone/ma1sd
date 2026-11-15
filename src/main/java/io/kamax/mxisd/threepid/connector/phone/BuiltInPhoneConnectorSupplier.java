@@ -24,6 +24,7 @@ import com.google.gson.JsonObject;
 import io.kamax.matrix.json.GsonUtil;
 import io.kamax.mxisd.Mxisd;
 import io.kamax.mxisd.config.threepid.connector.PhoneTwilioConfig;
+import io.kamax.mxisd.config.threepid.connector.PhoneWebsmsConfig;
 import io.kamax.mxisd.config.threepid.medium.PhoneConfig;
 import org.apache.commons.lang3.StringUtils;
 
@@ -40,6 +41,11 @@ public class BuiltInPhoneConnectorSupplier implements PhoneConnectorSupplier {
         if (StringUtils.equals(PhoneSmsTwilioConnector.ID, cfg.getConnector())) {
             PhoneTwilioConfig cCfg = GsonUtil.get().fromJson(cfg.getConnectors().getOrDefault(PhoneSmsTwilioConnector.ID, new JsonObject()), PhoneTwilioConfig.class);
             return Optional.of(new PhoneSmsTwilioConnector(cCfg));
+        }
+
+        if (StringUtils.equals(PhoneSmsWebsmsConnector.ID, cfg.getConnector())) {
+            PhoneWebsmsConfig cCfg = GsonUtil.get().fromJson(cfg.getConnectors().getOrDefault(PhoneSmsWebsmsConnector.ID, new JsonObject()), PhoneWebsmsConfig.class);
+            return Optional.of(new PhoneSmsWebsmsConnector(cCfg));
         }
 
         return Optional.empty();

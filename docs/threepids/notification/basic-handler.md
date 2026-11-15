@@ -14,6 +14,7 @@ This handler can be used with the 3PID types:
   - [SMTP](../medium/email/smtp-connector.md)
 - SMS
   - [Twilio](../medium/msisdn/twilio-connector.md)
+  - [websms](../medium/msisdn/websms-connector.md)
 
 ## Configuration
 Enabled by default or with:
