@@ -231,8 +231,10 @@ public class HttpMxisd {
             routingHandler.post(AccountRegisterHandler.Path, sane(new AccountRegisterHandler(m.getAccMgr())));
             wrapWithTokenAndAuthorizationHandlers(routingHandler, Methods.GET, new AccountGetUserInfoHandler(m.getAccMgr()),
                 AccountGetUserInfoHandler.Path, true);
-            wrapWithTokenAndAuthorizationHandlers(routingHandler, Methods.GET, new AccountLogoutHandler(m.getAccMgr()),
-                AccountLogoutHandler.Path, true);
+            // The spec defines POST; GET is kept for clients that used the old registration
+            AccountLogoutHandler logout = new AccountLogoutHandler(m.getAccMgr());
+            wrapWithTokenAndAuthorizationHandlers(routingHandler, Methods.POST, logout, AccountLogoutHandler.Path, true);
+            wrapWithTokenAndAuthorizationHandlers(routingHandler, Methods.GET, logout, AccountLogoutHandler.Path, true);
         }
     }
 
