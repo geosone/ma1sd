@@ -26,6 +26,11 @@ public class SqlHashStorage implements HashStorage {
     }
 
     @Override
+    public void remove(ThreePidMapping pidMapping) {
+        storage.removeHash(pidMapping.getMxid(), pidMapping.getMedium(), pidMapping.getValue());
+    }
+
+    @Override
     public void clear() {
         storage.clearHashes();
     }

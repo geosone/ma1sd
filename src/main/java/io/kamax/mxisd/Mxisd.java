@@ -130,6 +130,7 @@ public class Mxisd {
         pMgr = new ProfileManager(ProfileProviders.get(), clientDns, httpClient);
         notifMgr = new NotificationManager(cfg.getNotification(), NotificationHandlers.get());
         sessMgr = new SessionManager(cfg, store, notifMgr, resolver, signMgr);
+        sessMgr.setHashManager(hashManager);
         invMgr = new InvitationManager(cfg, store, idStrategy, keyMgr, signMgr, resolver, notifMgr, pMgr);
         authMgr = new AuthManager(cfg, AuthProviders.get(), idStrategy, invMgr, clientDns, httpClient);
         dirMgr = new DirectoryManager(cfg.getDirectory(), clientDns, httpClient, DirectoryProviders.get());

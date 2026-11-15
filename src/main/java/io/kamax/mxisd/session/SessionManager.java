@@ -20,6 +20,8 @@
 
 package io.kamax.mxisd.session;
 
+import io.kamax.mxisd.lookup.ThreePidMapping;
+import io.kamax.mxisd.hash.HashManager;
 import static io.kamax.mxisd.config.SessionConfig.Policy.PolicyTemplate;
 
 import com.google.gson.JsonObject;
@@ -77,6 +79,29 @@ public class SessionManager {
     private NotificationManager notifMgr;
     private HomeserverFederationResolver resolver;
     private SignatureManager signatureManager;
+
+    private HashManager hashManager;
+
+    /** Keeps the lookup hashes in step with bind/unbind instead of waiting for the next rotation. */
+    public void setHashManager(HashManager hashManager) {
+        this.hashManager = hashManager;
+    }
+
+    private void updateHash(ThreePid tpid, String mxid, boolean bound) {
+        if (hashManager == null || !hashManager.getConfig().isEnabled()) {
+            return;
+        }
+        ThreePidMapping mapping = new ThreePidMapping(tpid.getMedium(), tpid.getAddress(), mxid);
+        try {
+            if (bound) {
+                hashManager.getHashEngine().addMapping(mapping);
+            } else {
+                hashManager.getHashEngine().removeMapping(mapping);
+            }
+        } catch (RuntimeException e) {
+            log.warn("Unable to update the lookup hash for {} (next rotation will): {}", tpid.getMedium(), e.getMessage());
+        }
+    }
 
     public SessionManager(
         MxisdConfig cfg,
@@ -193,6 +218,7 @@ public class SessionManager {
 
         log.info("Session {}: Binding of {}:{} to Matrix ID {} is accepted",
             session.getId(), session.getThreePid().getMedium(), session.getThreePid().getAddress(), mxid.getId());
+        updateHash(session.getThreePid(), mxid.getId(), true);
 
         SingleLookupRequest request = new SingleLookupRequest();
         request.setType(session.getThreePid().getMedium());
@@ -237,6 +263,7 @@ public class SessionManager {
         }
 
         log.info("Unbinding of {} {} to {} is accepted", tpid.getMedium(), tpid.getAddress(), mxid.getId());
+        updateHash(tpid, mxid.getId(), false);
         if (cfg.getSession().getPolicy().getUnbind().shouldNotify()) {
             notifMgr.sendForUnbind(tpid);
         }

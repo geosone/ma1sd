@@ -73,5 +73,7 @@ public interface IStorage {
 
     void addHash(String mxid, String medium, String address, String hash);
 
+    void removeHash(String mxid, String medium, String address);
+
     Collection<Pair<String, ThreePidMapping>> findHashes(Iterable<String> hashes);
 }

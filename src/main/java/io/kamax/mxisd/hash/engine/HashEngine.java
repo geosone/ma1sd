@@ -50,6 +50,26 @@ public class HashEngine implements Engine {
     }
 
     @Override
+    public void addMapping(ThreePidMapping mapping) {
+        synchronized (hashStorage) {
+            if (pepper == null) {
+                return; // not initialised yet, the first update will include it
+            }
+            hashStorage.remove(mapping);
+            hashStorage.add(mapping, hash(mapping));
+        }
+        LOGGER.info("Added hash for a newly bound {}", mapping.getMedium());
+    }
+
+    @Override
+    public void removeMapping(ThreePidMapping mapping) {
+        synchronized (hashStorage) {
+            hashStorage.remove(mapping);
+        }
+        LOGGER.info("Removed hash for an unbound {}", mapping.getMedium());
+    }
+
+    @Override
     public String getPepper() {
         synchronized (hashStorage) {
             return pepper;

@@ -9,7 +9,7 @@ Content-Disposition: inline
 
 Hello there!
 
-You or a server on your behalf unbinded your email.
+You or a server on your behalf removed the link between your email address and your Matrix account on this identity server.
 
 If you didn't make this request, please contact the system administrator.
 
@@ -41,7 +41,7 @@ Content-Disposition: inline
                 font-family: 'Open Sans', Helvetica, Arial, Sans-Serif;
                 font-color: #454545;
                 font-size: 12pt;
-                width: 100%%;
+                width: 100%;
                 padding: 20px;
             }
 
@@ -61,7 +61,7 @@ Content-Disposition: inline
                 <td id="inner">
                     <p>Hello there!</p>
 
-                    <p>You or a server on your behalf unbinded your email.</p>
+                    <p>You or a server on your behalf removed the link between your email address and your Matrix account on this identity server.</p>
 
                     <p>If you didn't make this request, please contact the system administrator.</p>
 

@@ -11,5 +11,7 @@ public interface HashStorage {
 
     void add(ThreePidMapping pidMapping, String hash);
 
+    void remove(ThreePidMapping pidMapping);
+
     void clear();
 }

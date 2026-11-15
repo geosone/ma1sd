@@ -45,7 +45,7 @@ Content-Disposition: inline
                 font-family: 'Open Sans', Helvetica, Arial, Sans-Serif;
                 font-color: #454545;
                 font-size: 12pt;
-                width: 100%%;
+                width: 100%;
                 padding: 20px;
             }
 

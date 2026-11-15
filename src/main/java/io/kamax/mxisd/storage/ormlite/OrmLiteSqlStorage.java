@@ -27,6 +27,7 @@ import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
 import com.j256.ormlite.jdbc.db.PostgresDatabaseType;
 import com.j256.ormlite.jdbc.db.SqliteDatabaseType;
+import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
@@ -486,6 +487,15 @@ public class OrmLiteSqlStorage implements IStorage {
     public void addHash(String mxid, String medium, String address, String hash) {
         withCatcher(() -> {
             hashDao.create(new HashDao(mxid, medium, address, hash));
+        });
+    }
+
+    @Override
+    public void removeHash(String mxid, String medium, String address) {
+        withCatcher(() -> {
+            DeleteBuilder<HashDao, String> builder = hashDao.deleteBuilder();
+            builder.where().eq("mxid", mxid).and().eq("medium", medium).and().eq("address", address);
+            builder.delete();
         });
     }
 

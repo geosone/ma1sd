@@ -22,4 +22,8 @@ public class EmptyStorage implements HashStorage {
     public void clear() {
 
     }
+
+    @Override
+    public void remove(ThreePidMapping pidMapping) {
+    }
 }

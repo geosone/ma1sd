@@ -31,6 +31,12 @@ public class InMemoryHashStorage implements HashStorage {
     }
 
     @Override
+    public void remove(ThreePidMapping pidMapping) {
+        mapping.values().removeIf(m -> m.getMxid().equals(pidMapping.getMxid())
+            && m.getMedium().equals(pidMapping.getMedium()) && m.getValue().equals(pidMapping.getValue()));
+    }
+
+    @Override
     public void clear() {
         mapping.clear();
     }
