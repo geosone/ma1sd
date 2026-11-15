@@ -36,7 +36,7 @@ Later version(s) of this feature may directly control registration itself to cre
 ### Reverse Proxy
 #### nginx
 ```nginx
-location ~* ^/_matrix/client/r0/register/[^/]+/requestToken$ {
+location ~* ^/_matrix/client/(r0|v3)/register/[^/]+/requestToken$ {
 	proxy_pass		http://localhost:8090;
 	proxy_set_header	Host $host;
 	proxy_set_header	X-Forwarded-For $remote_addr;

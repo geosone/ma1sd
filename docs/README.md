@@ -9,6 +9,7 @@
   - [Docker](install/docker.md)
   - [From source](install/source.md)
 - [Architecture overview](architecture.md)
+- [Matrix specification compliance](spec-compliance.md)
 - [Configuration](configure.md)
 - Features
   - [Authentication](features/authentication.md)

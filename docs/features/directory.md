@@ -27,12 +27,12 @@ internally, so users can just find themselves **prior** to having any common roo
 By integrating ma1sd, you get the default behaviour and a bunch of extras, ensuring your users will always find each other.
 
 ## Overview
-This is performed by intercepting the Homeserver endpoint `/_matrix/client/r0/user_directory/search` like so:
+This is performed by intercepting the Homeserver endpoint `/_matrix/client/v3/user_directory/search` (or the legacy `r0`) like so:
 ```
            +----------------------------------------------+
 Client --> | Reverse proxy                                                                         Step 2
            |                                              Step 1    +-------------------------+
-           |   /_matrix/client/r0/user_directory/search ----------> |                         |  Search in   +---------+
+           |   /_matrix/client/v3/user_directory/search ----------> |                         |  Search in   +---------+
            |                        /\                              | ma1sd - Identity server | -----------> | Backend |
            |   /_matrix/*            \----------------------------- |                         |  all users   +---------+
            |        |            Step 4: Send back merged results   +-------------------------+
@@ -41,7 +41,7 @@ Client --> | Reverse proxy                                                      
                     |                                                            |
                     |    +------------+                                Search in known users
                     \--> | Homeserver | <----------------------------------------/
-                         +------------+   /_matrix/client/r0/user_directory/search
+                         +------------+   /_matrix/client/v3/user_directory/search
 ```
 Steps:
 1. The intercepted request is directly sent to ma1sd instead of the Homeserver.
@@ -60,7 +60,7 @@ which directly answered the request.
 #### Apache2
 The specific configuration to put under the relevant `VirtualHost`:
 ```apache
-ProxyPass /_matrix/client/r0/user_directory/ http://0.0.0.0:8090/_matrix/client/r0/user_directory/
+ProxyPassMatch "^/_matrix/client/(r0|v3)/user_directory/(.*)$" "http://0.0.0.0:8090/_matrix/client/$1/user_directory/$2"
 ```
 `ProxyPreserveHost` or equivalent must be enabled to detect to which Homeserver ma1sd should talk to when building
 results.
@@ -73,7 +73,7 @@ Your `VirtualHost` should now look like this:
     ...
     
     ProxyPreserveHost on
-    ProxyPass /_matrix/client/r0/user_directory/ http://localhost:8090/_matrix/client/r0/user_directory/
+    ProxyPassMatch "^/_matrix/client/(r0|v3)/user_directory/(.*)$" "http://localhost:8090/_matrix/client/$1/user_directory/$2"
     ProxyPass /_matrix/identity http://localhost:8090/_matrix/identity
     ProxyPass /_matrix http://localhost:8008/_matrix
 </VirtualHost>
@@ -82,8 +82,8 @@ Your `VirtualHost` should now look like this:
 #### nginx
 The specific configuration to add under your `server` section is:
 ```nginx
-location /_matrix/client/r0/user_directory {
-    proxy_pass http://0.0.0.0:8090/_matrix/client/r0/user_directory;
+location ~ ^/_matrix/client/(r0|v3)/user_directory/ {
+    proxy_pass http://0.0.0.0:8090;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $remote_addr;
 }
@@ -97,8 +97,8 @@ server {
     
     ...
     
-    location /_matrix/client/r0/user_directory {
-        proxy_pass http://localhost:8090/_matrix/client/r0/user_directory;
+    location ~ ^/_matrix/client/(r0|v3)/user_directory/ {
+        proxy_pass http://localhost:8090;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $remote_addr;
     }

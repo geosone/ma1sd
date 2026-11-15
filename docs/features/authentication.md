@@ -85,14 +85,14 @@ This feature also allows to work around the following issues:
 cannot change the localpart being authenticated.
 
 ### Overview
-This is performed by intercepting the Homeserver endpoint `/_matrix/client/r0/login` as depicted below:
+This is performed by intercepting the Homeserver endpoint `/_matrix/client/v3/login` (or the legacy `r0`) as depicted below:
 ```
             +----------------------------+
             |  Reverse Proxy             |
             |                            |
             |                            |     Step 1    +---------------------------+     Step 2
             |                            |               |                           |
-Client+---->| /_matrix/client/r0/login +---------------->|                           | Look up address  +---------+
+Client+---->| /_matrix/client/v3/login +---------------->|                           | Look up address  +---------+
             |                      ^     |               |  ma1sd - Identity server  +----------------->| Backend |
             |                      |     |               |                           |                  +---------+
             | /_matrix/* +--+      +---------------------+                           |
@@ -100,7 +100,7 @@ Client+---->| /_matrix/client/r0/login +---------------->|                      
             |               |            |     Step 4                    |
             |               |            |                               | Step 3
             +---------------|------------+                               |
-                            |                                            | /_matrix/client/r0/login
+                            |                                            | /_matrix/client/v3/login
                             |                       +--------------+     |
                             |                       |              |     |
                             +---------------------->|  Homeserver  |<----+
@@ -127,7 +127,7 @@ Steps of user authentication using a 3PID:
 ##### Apache2
 The specific configuration to put under the relevant `VirtualHost`:
 ```apache
-ProxyPass /_matrix/client/r0/login http://localhost:8090/_matrix/client/r0/login
+ProxyPassMatch "^/_matrix/client/(r0|v3)/login$" "http://localhost:8090/_matrix/client/$1/login"
 ```
 `ProxyPreserveHost` or equivalent **must** be enabled to detect to which Homeserver ma1sd should talk to when building results.
 
@@ -139,7 +139,7 @@ Your VirtualHost should now look similar to:
     ...
     
     ProxyPreserveHost on
-    ProxyPass /_matrix/client/r0/login http://localhost:8090/_matrix/client/r0/login
+    ProxyPassMatch "^/_matrix/client/(r0|v3)/login$" "http://localhost:8090/_matrix/client/$1/login"
     ProxyPass /_matrix/identity http://localhost:8090/_matrix/identity
     ProxyPass /_matrix http://localhost:8008/_matrix
 </VirtualHost>
@@ -150,7 +150,7 @@ Your VirtualHost should now look similar to:
 The specific configuration to add under the relevant `server`:
 
 ```nginx
-location /_matrix/client/r0/login {
+location ~ ^/_matrix/client/(r0|v3)/login$ {
     proxy_pass http://localhost:8090;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $remote_addr;
@@ -166,7 +166,7 @@ server {
     
     # ...
     
-    location /_matrix/client/r0/login {
+    location ~ ^/_matrix/client/(r0|v3)/login$ {
         proxy_pass http://localhost:8090;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $remote_addr;

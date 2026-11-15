@@ -70,7 +70,7 @@ endpoints to apply the policies.
 ###### nginx
 **IMPORTANT**: Must be placed before your global `/_matrix` entry:
 ```nginx
-location ~* ^/_matrix/client/r0/rooms/([^/]+)/invite$ {
+location ~* ^/_matrix/client/(r0|v3)/rooms/([^/]+)/invite$ {
     proxy_pass		    http://127.0.0.1:8090;
     proxy_set_header	Host $host;
     proxy_set_header	X-Forwarded-For $remote_addr;
