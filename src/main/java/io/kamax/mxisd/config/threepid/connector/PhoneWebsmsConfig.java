@@ -24,14 +24,13 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Configuration of the websms.com (sms.at / LINK Mobility) connector.
- * Authenticate either with an API access token or with username and password.
+ * Uses the official websms Java SDK, which authenticates with username and password.
  */
 public class PhoneWebsmsConfig {
 
     private transient final Logger log = LoggerFactory.getLogger(PhoneWebsmsConfig.class);
 
     private String url = "https://api.websms.com";
-    private String accessToken = "";
     private String username = "";
     private String password = "";
     private int maxSmsPerMessage = 1;
@@ -43,14 +42,6 @@ public class PhoneWebsmsConfig {
 
     public void setUrl(String url) {
         this.url = url;
-    }
-
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
     }
 
     public String getUsername() {
@@ -86,9 +77,7 @@ public class PhoneWebsmsConfig {
     }
 
     public boolean isConfigured() {
-        return StringUtils.isNotBlank(url)
-            && (StringUtils.isNotBlank(accessToken)
-                || (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)));
+        return StringUtils.isNotBlank(url) && StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password);
     }
 
     public PhoneWebsmsConfig build() {
@@ -99,7 +88,7 @@ public class PhoneWebsmsConfig {
 
         log.info("--- Phone SMS websms connector config ---");
         log.info("URL: {}", getUrl());
-        log.info("Authentication: {}", StringUtils.isNotBlank(accessToken) ? "access token" : "username " + getUsername());
+        log.info("Username: {}", getUsername());
         log.info("Max SMS per message: {}", getMaxSmsPerMessage());
         log.info("Test mode: {}", isTest());
 

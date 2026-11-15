@@ -14,7 +14,7 @@
 
 ### Build
 ```bash
-git clone https://github.com/ma1uta/ma1sd.git
+git clone --recurse-submodules https://github.com/geosone/ma1sd.git
 cd ma1sd
 ./gradlew build
 ```

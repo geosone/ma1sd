@@ -1,0 +1,3 @@
+[submodule "third_party/websmscom-java"]
+	path = third_party/websmscom-java
+	url = https://github.com/websms-com/websmscom-java.git

@@ -56,6 +56,17 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
+// Official websms.com Java SDK (MIT), git submodule third_party/websmscom-java:
+// built from its sources; its API domain classes only ship as a jar in that repo.
+def websmsSdk = 'third_party/websmscom-java'
+sourceSets {
+    main {
+        java {
+            srcDir "${websmsSdk}/src"
+        }
+    }
+}
+
 String ma1sdVersion() {
     def versionPattern = Pattern.compile("v(\\d+\\.)?(\\d+\\.)?(\\d+)(-.*)?")
 
@@ -92,6 +103,9 @@ repositories {
 }
 
 dependencies {
+    // websms.com SDK domain classes (from the SDK repo, see sourceSets)
+    implementation files("${websmsSdk}/lib/businessapi-client-0.1.jar")
+
     // Logging
     api 'org.slf4j:slf4j-simple:1.7.25'
 
@@ -181,6 +195,11 @@ shadowJar {
     archiveBaseName = project.name
     archiveClassifier = null
     archiveVersion = null
+    // MIT licence of the bundled websms SDK
+    from("${websmsSdk}/LICENSE") {
+        into 'META-INF'
+        rename { 'LICENSE.websmscom-java' }
+    }
 }
 
 task debBuild(dependsOn: shadowJar) {
