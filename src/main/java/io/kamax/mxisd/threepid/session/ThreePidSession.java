@@ -22,6 +22,7 @@ package io.kamax.mxisd.threepid.session;
 
 import io.kamax.matrix.ThreePid;
 import io.kamax.mxisd.exception.BadRequestException;
+import io.kamax.mxisd.exception.HttpMatrixException;
 import io.kamax.mxisd.exception.InvalidCredentialsException;
 import io.kamax.mxisd.storage.dao.IThreePidSessionDao;
 import org.apache.commons.lang.StringUtils;
@@ -187,7 +188,7 @@ public class ThreePidSession implements IThreePidSession {
 
     public synchronized void validate(String token) {
         if (Instant.now().minus(24, ChronoUnit.HOURS).isAfter(getCreationTime())) {
-            throw new BadRequestException("Session " + getId() + " has expired");
+            throw new HttpMatrixException(400, "M_SESSION_EXPIRED", "Session " + getId() + " has expired");
         }
 
         if (!StringUtils.equals(this.token, token)) {

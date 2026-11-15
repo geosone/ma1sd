@@ -20,10 +20,24 @@
 
 package io.kamax.mxisd.exception;
 
+/**
+ * The 3PID is already bound to a Matrix ID: 400 M_THREEPID_IN_USE with the bound mxid.
+ */
 public class MappingAlreadyExistsException extends RuntimeException {
 
+    private final String mxid;
+
     public MappingAlreadyExistsException() {
-        super("A mapping already exists for this 3PID");
+        this(null);
+    }
+
+    public MappingAlreadyExistsException(String mxid) {
+        super("Binding already known");
+        this.mxid = mxid;
+    }
+
+    public String getMxid() {
+        return mxid;
     }
 
 }

@@ -26,20 +26,33 @@ to accept it both in the `Authorization: Bearer` header and in the deprecated
 | GET | `/v2/hash_details` | yes | yes, if `hashing.enabled` |
 | POST | `/v2/lookup` | yes | yes, if `hashing.enabled` |
 | POST | `/v2/validate/{email,msisdn}/requestToken` | yes | yes |
-| GET, POST | `/v2/validate/{email,msisdn}/submitToken` | yes | yes |
+| GET, POST | `/v2/validate/{email,msisdn}/submitToken` | yes | yes; GET without token (see below) |
 | POST | `/v2/3pid/bind` | yes | yes |
 | GET | `/v2/3pid/getValidated3pid` | yes | yes |
-| POST | `/v2/3pid/unbind` | yes | yes |
-| POST | `/v2/store-invite` | yes | yes |
+| POST | `/v2/3pid/unbind` | homeserver signature or `sid` + `client_secret` | yes |
+| POST | `/v2/store-invite` | yes | yes, long-term + ephemeral key, `M_THREEPID_IN_USE` |
 | POST | `/v2/sign-ed25519` | yes | yes |
 
 The `/v2` endpoints are served when `matrix.v2` is `true` (the default).
+
+Notes:
+- The spec marks `GET .../submitToken` as authenticated, but it is the link the user
+  opens from the e-mail in a browser, which has no identity server token. Like Sydent,
+  ma1sd serves it without one; `sid`, `client_secret` and `token` authorize it. The
+  e-mail link points to the v2 path.
+- `3pid/unbind` checks the `X-Matrix` signature of the homeserver against the path it
+  called (`destination` in the header is accepted); a bad signature gives 403
+  `M_FORBIDDEN`.
+- Unknown endpoints give 404 and known endpoints with a wrong method 405, both
+  `M_UNRECOGNIZED`. An expired session (24 hours) gives 400 `M_SESSION_EXPIRED`.
+- All errors carry `errcode` and `error`.
 
 ### Removed from the spec
 
 Spec v1.1 removed the v1 identity API (`/_matrix/identity/api/v1/...`, including
 `lookup` and `bulk_lookup`, MSC2713). ma1sd still serves it while `matrix.v1` is
-`true`, for old clients and homeservers; set `matrix.v1: false` to turn it off.
+`true`, for old clients and homeservers; set `matrix.v1: false` to turn it off
+(nothing ma1sd sends out points to v1 any more).
 
 Spec v1.11 deprecated the `access_token` query parameter in favour of the
 `Authorization` header; servers must still accept it.

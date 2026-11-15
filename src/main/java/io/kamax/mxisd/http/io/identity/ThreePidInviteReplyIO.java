@@ -20,11 +20,17 @@
 
 package io.kamax.mxisd.http.io.identity;
 
+import io.kamax.mxisd.http.IsAPIv2;
 import io.kamax.mxisd.invitation.IThreePidInviteReply;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Response of POST /_matrix/identity/v2/store-invite: the token, the display name and
+ * the public keys [server long-term key, ephemeral key of this invite].
+ */
 public class ThreePidInviteReplyIO {
 
     private String token;
@@ -33,8 +39,23 @@ public class ThreePidInviteReplyIO {
 
     public ThreePidInviteReplyIO(IThreePidInviteReply reply, String pubKey, String publicUrl) {
         this.token = reply.getToken();
-        this.public_keys = Collections.singletonList(new Key(pubKey, publicUrl));
         this.display_name = reply.getDisplayName();
+
+        String longTerm = pubKey;
+        String ephemeral = reply.getInvite().getProperties().get("e_key_public");
+        List<String> keys = reply.getPublicKeys();
+        if (keys != null && !keys.isEmpty()) {
+            longTerm = keys.get(0);
+            if (keys.size() > 1) {
+                ephemeral = keys.get(1);
+            }
+        }
+
+        this.public_keys = new ArrayList<>();
+        this.public_keys.add(new Key(longTerm, publicUrl + IsAPIv2.Base + "/pubkey/isvalid"));
+        if (StringUtils.isNotBlank(ephemeral)) {
+            this.public_keys.add(new Key(ephemeral, publicUrl + IsAPIv2.Base + "/pubkey/ephemeral/isvalid"));
+        }
     }
 
     public String getToken() {
@@ -49,12 +70,12 @@ public class ThreePidInviteReplyIO {
         return display_name;
     }
 
-    public class Key {
+    public static class Key {
         private String key_validity_url;
         private String public_key;
 
-        public Key(String key, String publicUrl) {
-            this.key_validity_url = publicUrl + "/_matrix/identity/api/v1/pubkey/isvalid";
+        public Key(String key, String keyValidityUrl) {
+            this.key_validity_url = keyValidityUrl;
             this.public_key = key;
         }
 

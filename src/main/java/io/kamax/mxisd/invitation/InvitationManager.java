@@ -283,7 +283,7 @@ public class InvitationManager {
         Optional<SingleLookupReply> result = lookup3pid(invitation.getMedium(), invitation.getAddress());
         if (result.isPresent()) {
             log.info("Mapping for {}:{} already exists, refusing to store invite", invitation.getMedium(), invitation.getAddress());
-            throw new MappingAlreadyExistsException();
+            throw new MappingAlreadyExistsException(result.get().getMxid().getId());
         }
 
         String token = RandomStringUtils.randomAlphanumeric(64);

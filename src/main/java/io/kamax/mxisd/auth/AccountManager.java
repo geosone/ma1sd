@@ -1,5 +1,7 @@
 package io.kamax.mxisd.auth;
 
+import org.apache.commons.lang3.StringUtils;
+import io.kamax.mxisd.exception.HttpMatrixException;
 import com.google.gson.JsonObject;
 import io.kamax.matrix.MatrixID;
 import io.kamax.matrix.json.GsonUtil;
@@ -45,9 +47,11 @@ public class AccountManager {
     }
 
     public String register(OpenIdToken openIdToken) {
-        Objects.requireNonNull(openIdToken.getAccessToken(), "Missing required access_token");
-        Objects.requireNonNull(openIdToken.getTokenType(), "Missing required token type");
-        Objects.requireNonNull(openIdToken.getMatrixServerName(), "Missing required matrix domain");
+        if (openIdToken == null || StringUtils.isAnyBlank(openIdToken.getAccessToken(), openIdToken.getTokenType(),
+            openIdToken.getMatrixServerName())) {
+            throw new HttpMatrixException(400, "M_MISSING_PARAMS",
+                "access_token, token_type, matrix_server_name and expires_in are required");
+        }
 
         LOGGER.info("Registration from the server: {}", openIdToken.getMatrixServerName());
         String userId = getUserId(openIdToken);

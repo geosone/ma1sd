@@ -20,6 +20,7 @@
 
 package io.kamax.mxisd.http.undertow.handler;
 
+import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.MalformedJsonException;
 import io.kamax.matrix.json.GsonUtil;
@@ -70,15 +71,19 @@ public class SaneHandler extends BasicHttpHandler {
 
                 child.handleRequest(exchange);
             } catch (IllegalArgumentException e) {
-                respond(exchange, HttpStatus.SC_BAD_REQUEST, GsonUtil.makeObj("error", e.getMessage()));
+                respond(exchange, HttpStatus.SC_BAD_REQUEST, "M_INVALID_PARAM", e.getMessage());
             } catch (BadRequestException e) {
                 respond(exchange, HttpStatus.SC_BAD_REQUEST, "M_BAD_REQUEST", e.getMessage());
             } catch (MappingAlreadyExistsException e) {
-                respond(exchange, HttpStatus.SC_BAD_REQUEST, "M_ALREADY_EXISTS", e.getMessage());
+                JsonObject body = buildErrorBody(exchange, "M_THREEPID_IN_USE", e.getMessage());
+                if (StringUtils.isNotBlank(e.getMxid())) {
+                    body.addProperty("mxid", e.getMxid());
+                }
+                respond(exchange, HttpStatus.SC_BAD_REQUEST, body);
             } catch (JsonMemberNotFoundException e) {
-                respond(exchange, HttpStatus.SC_BAD_REQUEST, "M_JSON_MISSING_KEYS", e.getMessage());
+                respond(exchange, HttpStatus.SC_BAD_REQUEST, "M_MISSING_PARAMS", e.getMessage());
             } catch (InvalidResponseJsonException | JsonSyntaxException | MalformedJsonException e) {
-                respond(exchange, HttpStatus.SC_BAD_REQUEST, "M_INVALID_JSON", e.getMessage());
+                respond(exchange, HttpStatus.SC_BAD_REQUEST, "M_NOT_JSON", e.getMessage());
             } catch (InvalidJsonException e) {
                 respond(exchange, HttpStatus.SC_BAD_REQUEST, e.getErrorCode(), e.getError());
             } catch (InvalidCredentialsException e) {

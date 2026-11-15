@@ -43,7 +43,7 @@ public class SessionTpidUnbindHandler extends BasicHttpHandler implements ApiHan
         String auth = exchange.getRequestHeaders().getFirst("Authorization");
 
         JsonObject body = parseJsonObject(exchange);
-        sessionMgr.unbind(auth, body);
+        sessionMgr.unbind(auth, exchange.getRequestURI(), body);
         writeBodyAsUtf8(exchange, "{}");
     }
 

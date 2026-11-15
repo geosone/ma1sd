@@ -31,6 +31,7 @@ import io.kamax.matrix.json.MatrixJson;
 import io.kamax.mxisd.config.MxisdConfig;
 import io.kamax.mxisd.crypto.SignatureManager;
 import io.kamax.mxisd.exception.BadRequestException;
+import io.kamax.mxisd.exception.HttpMatrixException;
 import io.kamax.mxisd.exception.NotAllowedException;
 import io.kamax.mxisd.exception.RemoteHomeServerException;
 import io.kamax.mxisd.exception.SessionNotValidatedException;
@@ -199,7 +200,7 @@ public class SessionManager {
         return new SingleLookupReply(request, mxid);
     }
 
-    public void unbind(String auth, JsonObject reqData) {
+    public void unbind(String auth, String uri, JsonObject reqData) {
         if (!cfg.getSession().getPolicy().getUnbind().getEnabled()) {
             log.error("Unbind disabled.");
             throw new NotAllowedException("Unbinding 3PID is disabled");
@@ -230,7 +231,7 @@ public class SessionManager {
         if (StringUtils.isNotBlank(sid) && StringUtils.isNotBlank(secret)) {
             checkSession(sid, secret, tpid);
         } else if (StringUtils.isNotBlank(auth)) {
-            checkAuthorization(auth, reqData);
+            checkAuthorization(auth, uri, reqData);
         } else {
             throw new NotAllowedException("Unable to validate request");
         }
@@ -253,7 +254,7 @@ public class SessionManager {
         return url.getHost() + (port != -1 ? ":" + url.getPort() : "");
     }
 
-    private void checkAuthorization(String auth, JsonObject reqData) {
+    private void checkAuthorization(String auth, String uri, JsonObject reqData) {
         if (!auth.startsWith("X-Matrix ")) {
             throw new NotAllowedException("Wrong authorization header");
         }
@@ -270,9 +271,12 @@ public class SessionManager {
         String key = null;
         String sig = null;
         for (String param : params) {
-            String[] paramItems = param.split("=");
-            String paramKey = paramItems[0];
-            String paramValue = paramItems[1];
+            String[] paramItems = param.trim().split("=", 2);
+            if (paramItems.length != 2) {
+                throw new BadRequestException("Malformed authorization parameter");
+            }
+            String paramKey = paramItems[0].trim();
+            String paramValue = paramItems[1].trim();
             switch (paramKey) {
                 case "origin":
                     origin = removeQuotes(paramValue);
@@ -282,6 +286,9 @@ public class SessionManager {
                     break;
                 case "sig":
                     sig = removeQuotes(paramValue);
+                    break;
+                case "destination":
+                    // Federation-style header field (spec v1.3); the signed JSON uses destination_is
                     break;
                 default:
                     log.error("Unknown parameter: {}", param);
@@ -300,7 +307,8 @@ public class SessionManager {
 
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("method", "POST");
-        jsonObject.addProperty("uri", "/_matrix/identity/api/v1/3pid/unbind");
+        // The homeserver signs the path it actually called (v2, or v1 for old homeservers)
+        jsonObject.addProperty("uri", uri);
         jsonObject.addProperty("origin", origin);
         jsonObject.addProperty("destination_is", domain);
         jsonObject.add("content", reqData);
@@ -372,7 +380,7 @@ public class SessionManager {
         final boolean verificationResult = signatureManager.verify(dsaPublicKey, signature, canonical.getBytes(StandardCharsets.UTF_8));
         log.info("Verification result: {}", verificationResult);
         if (!verificationResult) {
-            throw new RemoteHomeServerException("Unable to verify request.");
+            throw new HttpMatrixException(403, "M_FORBIDDEN", "Invalid homeserver signature");
         }
 
         log.info("Request was authorized.");

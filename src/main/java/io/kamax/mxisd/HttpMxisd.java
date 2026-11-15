@@ -31,6 +31,7 @@ import io.kamax.mxisd.http.undertow.handler.InternalInfoHandler;
 import io.kamax.mxisd.http.undertow.handler.OptionsHandler;
 import io.kamax.mxisd.http.undertow.handler.RequestDumpingHandler;
 import io.kamax.mxisd.http.undertow.handler.SaneHandler;
+import io.kamax.mxisd.http.undertow.handler.UnrecognizedHandler;
 import io.kamax.mxisd.http.undertow.handler.as.v1.AsNotFoundHandler;
 import io.kamax.mxisd.http.undertow.handler.as.v1.AsTransactionHandler;
 import io.kamax.mxisd.http.undertow.handler.as.v1.AsUserHandler;
@@ -107,9 +108,9 @@ public class HttpMxisd {
         HttpHandler asTxnHandler = sane(new AsTransactionHandler(m.getAs()));
         HttpHandler asNotFoundHandler = sane(new AsNotFoundHandler(m.getAs()));
 
+        // CORS pre-flight (OPTIONS) is answered by the fallback handlers below: a catch-all
+        // OPTIONS route would make every path "known" and turn unknown endpoints into 405
         final RoutingHandler handler = Handlers.routing()
-            .add("OPTIONS", "/**", sane(new OptionsHandler()))
-
             // Status endpoints
             .get(StatusHandler.Path, sane(new StatusHandler()))
             .get(VersionHandler.Path, sane(new VersionHandler()))
@@ -139,6 +140,10 @@ public class HttpMxisd {
         termsEndpoints(handler);
         hashEndpoints(handler);
         accountEndpoints(handler);
+
+        OptionsHandler options = new OptionsHandler();
+        handler.setFallbackHandler(sane(new UnrecognizedHandler(404, options)));
+        handler.setInvalidMethodHandler(sane(new UnrecognizedHandler(405, options)));
 
         if (m.getConfig().getInternal().isEnabled()) {
             handler.get(InternalInviteManagerHandler.PATH, new InternalInviteManagerHandler(m.getInvite()));
@@ -205,22 +210,33 @@ public class HttpMxisd {
     }
 
     private void identityEndpoints(RoutingHandler routingHandler) {
-        // Legacy v1
-        routingHandler.get(SingleLookupHandler.Path, sane(new SingleLookupHandler(m.getConfig(), m.getIdentity(), m.getSign())));
-        routingHandler.post(BulkLookupHandler.Path, sane(new BulkLookupHandler(m.getIdentity())));
+        // Legacy v1 (removed from the spec in v1.1), only with matrix.v1
+        if (m.getConfig().getMatrix().isV1()) {
+            routingHandler.get(SingleLookupHandler.Path, sane(new SingleLookupHandler(m.getConfig(), m.getIdentity(), m.getSign())));
+            routingHandler.post(BulkLookupHandler.Path, sane(new BulkLookupHandler(m.getIdentity())));
+        }
 
         addEndpoints(routingHandler, Methods.GET, false, new HelloHandler());
 
+        // The spec marks GET submitToken as authenticated, but it is the link the user opens
+        // from the e-mail in a browser, which has no identity server token (Sydent serves it
+        // unauthenticated too). The sid, client_secret and token in the link authorize it.
+        addEndpoints(routingHandler, Methods.GET, false,
+            new SessionValidationGetHandler(m.getSession(), m.getConfig())
+        );
         addEndpoints(routingHandler, Methods.GET, true,
-            new SessionValidationGetHandler(m.getSession(), m.getConfig()),
             new SessionTpidGetValidatedHandler(m.getSession())
+        );
+        // Unbind is authorized by the homeserver signature (X-Matrix) or by sid + client_secret,
+        // not by an identity server token
+        addEndpoints(routingHandler, Methods.POST, false,
+            new SessionTpidUnbindHandler(m.getSession())
         );
         addEndpoints(routingHandler, Methods.POST, true,
             new StoreInviteHandler(m.getConfig().getServer(), m.getInvite(), m.getKeyManager()),
             new SessionStartHandler(m.getSession()),
             new SessionValidationPostHandler(m.getSession()),
             new SessionTpidBindHandler(m.getSession(), m.getInvite(), m.getSign()),
-            new SessionTpidUnbindHandler(m.getSession()),
             new SignEd25519Handler(m.getConfig(), m.getInvite(), m.getSign())
         );
     }
