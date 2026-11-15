@@ -22,7 +22,7 @@ import java.util.regex.Pattern
 
 apply plugin: 'java-library'
 apply plugin: 'application'
-apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'com.gradleup.shadow'
 apply plugin: 'idea'
 apply plugin: 'com.github.ben-manes.versions'
 
@@ -48,9 +48,13 @@ def dockerImageName = "ma1uta/ma1sd"
 def dockerImageTag = "${dockerImageName}:${ma1sdVersion()}"
 
 group = 'io.kamax'
-mainClassName = 'io.kamax.mxisd.MxisdStandaloneExec'
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
+application {
+    mainClass = 'io.kamax.mxisd.MxisdStandaloneExec'
+}
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
 
 String ma1sdVersion() {
     def versionPattern = Pattern.compile("v(\\d+\\.)?(\\d+\\.)?(\\d+)(-.*)?")
@@ -78,8 +82,8 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:6.1.0'
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.38.0'
+        classpath 'com.gradleup.shadow:shadow-gradle-plugin:8.3.5'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.51.0'
     }
 }
 
@@ -164,6 +168,8 @@ dependencies {
 }
 
 jar {
+    // the fat jar from shadowJar is ma1sd.jar
+    archiveClassifier = 'plain'
     manifest {
         attributes(
                 'Implementation-Version': ma1sdVersion()
@@ -172,9 +178,9 @@ jar {
 }
 
 shadowJar {
-    baseName = project.name
-    classifier = null
-    version = null
+    archiveBaseName = project.name
+    archiveClassifier = null
+    archiveVersion = null
 }
 
 task debBuild(dependsOn: shadowJar) {
