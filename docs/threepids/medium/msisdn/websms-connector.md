@@ -2,12 +2,25 @@
 Connector ID: `websms`
 
 Sends SMS through [websms.com](https://websms.com) (sms.at, LINK Mobility) with the
-official [websms Java SDK](https://github.com/websms-com/websmscom-java) (MIT). The SDK
+official [websms Java SDK](https://github.com/websms-com/websmscom-java) (MIT) for
+username/password; the SDK has no token support, so token requests are sent directly. The SDK
 is a git submodule in `third_party/websmscom-java` and is built into ma1sd; clone with
 `git clone --recurse-submodules` or run `git submodule update --init`.
 
 ## Configuration
-Select the connector and set the websms account's username and password:
+Select the connector and authenticate with an API access token (created in the websms
+account under the API settings; sent as `Authorization: Bearer`):
+```yaml
+threepid:
+  medium:
+    msisdn:
+      connector: 'websms'
+      connectors:
+        websms:
+          access_token: 'myAccessToken'
+```
+
+or with the account's username and password (sent through the SDK):
 ```yaml
 threepid:
   medium:
