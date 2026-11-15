@@ -28,7 +28,15 @@ import java.util.Optional;
 
 public abstract class ApplicationServiceHandler extends BasicHttpHandler {
 
+    /**
+     * The homeserver token: from the Authorization header (Matrix 1.4+, Synapse sends
+     * it there), else from the legacy access_token query parameter.
+     */
     protected String getToken(HttpServerExchange ex) {
+        String header = ex.getRequestHeaders().getFirst("Authorization");
+        if (header != null && header.startsWith("Bearer ") && header.length() > "Bearer ".length()) {
+            return header.substring("Bearer ".length());
+        }
         return Optional.ofNullable(ex.getQueryParameters()
                 .getOrDefault("access_token", new LinkedList<>())
                 .peekFirst()

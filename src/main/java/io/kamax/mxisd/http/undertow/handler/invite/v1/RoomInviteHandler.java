@@ -62,7 +62,7 @@ public class RoomInviteHandler extends BasicHttpHandler {
     public void handleRequest(HttpServerExchange exchange) {
         String accessToken = getAccessToken(exchange);
 
-        String whoamiUri = dns.transform(URI.create(exchange.getRequestURL()).resolve(URI.create("/_matrix/client/r0/account/whoami"))).toString();
+        String whoamiUri = dns.transform(URI.create(exchange.getRequestURL()).resolve(URI.create("/_matrix/client/v3/account/whoami"))).toString();
         log.info("Who Am I URL: {}", whoamiUri);
         HttpGet whoAmIReq = new HttpGet(whoamiUri);
         whoAmIReq.addHeader("Authorization", "Bearer " + accessToken);

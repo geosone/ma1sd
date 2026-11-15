@@ -113,24 +113,10 @@ public class HttpMxisd {
             .get(StatusHandler.Path, sane(new StatusHandler()))
             .get(VersionHandler.Path, sane(new VersionHandler()))
 
-            // Authentication endpoints
-            .get(LoginHandler.Path, sane(new LoginGetHandler(m.getAuth(), m.getHttpClient())))
-            .post(LoginHandler.Path, sane(new LoginPostHandler(m.getAuth())))
+            // Client-server API endpoints are served for both the legacy r0 and the current v3 version
+            // (Matrix 1.1 renamed r0 to v3), so no reverse proxy rewrite is needed
             .post(RestAuthHandler.Path, sane(new RestAuthHandler(m.getAuth())))
-
-            // Directory endpoints
-            .post(UserDirectorySearchHandler.Path, sane(new UserDirectorySearchHandler(m.getDirectory())))
-
-            // Profile endpoints
-            .get(ProfileHandler.Path, sane(new ProfileHandler(m.getProfile())))
             .get(InternalProfileHandler.Path, sane(new InternalProfileHandler(m.getProfile())))
-
-            // Registration endpoints
-            .post(Register3pidRequestTokenHandler.Path,
-                sane(new Register3pidRequestTokenHandler(m.getReg(), m.getClientDns(), m.getHttpClient())))
-
-            // Invite endpoints
-            .post(RoomInviteHandler.Path, sane(new RoomInviteHandler(m.getHttpClient(), m.getClientDns(), m.getInvite())))
 
             // Application Service endpoints
             .get(AsUserHandler.Path, asUserHandler)
@@ -143,6 +129,7 @@ public class HttpMxisd {
 
             // Banned endpoints
             .get(InternalInfoHandler.Path, sane(new InternalInfoHandler()));
+        clientEndpoints(handler);
         keyEndpoints(handler);
         identityEndpoints(handler);
         termsEndpoints(handler);
@@ -167,6 +154,43 @@ public class HttpMxisd {
 
         m.stop();
     }
+
+    private void clientEndpoints(RoutingHandler routingHandler) {
+        HttpHandler loginGet = sane(new LoginGetHandler(m.getAuth(), m.getHttpClient()));
+        HttpHandler loginPost = sane(new LoginPostHandler(m.getAuth()));
+        HttpHandler directorySearch = sane(new UserDirectorySearchHandler(m.getDirectory()));
+        HttpHandler profile = sane(new ProfileHandler(m.getProfile()));
+        HttpHandler registerRequestToken = sane(new Register3pidRequestTokenHandler(m.getReg(), m.getClientDns(), m.getHttpClient()));
+        HttpHandler roomInvite = sane(new RoomInviteHandler(m.getHttpClient(), m.getClientDns(), m.getInvite()));
+
+        for (String version : CLIENT_API_VERSIONS) {
+            routingHandler
+                // Authentication endpoints
+                .get(clientPath(LoginHandler.Path, version), loginGet)
+                .post(clientPath(LoginHandler.Path, version), loginPost)
+                // Directory endpoints
+                .post(clientPath(UserDirectorySearchHandler.Path, version), directorySearch)
+                // Profile endpoints
+                .get(clientPath(ProfileHandler.Path, version), profile)
+                // Registration endpoints
+                .post(clientPath(Register3pidRequestTokenHandler.Path, version), registerRequestToken)
+                // Invite endpoints
+                .post(clientPath(RoomInviteHandler.Path, version), roomInvite);
+        }
+    }
+
+    /**
+     * Turn a client-server API path declared for r0 into the path for the given version.
+     */
+    static String clientPath(String r0Path, String version) {
+        String prefix = "/_matrix/client/r0/";
+        if (!r0Path.startsWith(prefix)) {
+            throw new IllegalArgumentException("Not an r0 client path: " + r0Path);
+        }
+        return "/_matrix/client/" + version + "/" + r0Path.substring(prefix.length());
+    }
+
+    private static final String[] CLIENT_API_VERSIONS = {"r0", "v3"};
 
     private void keyEndpoints(RoutingHandler routingHandler) {
         addEndpoints(routingHandler, Methods.GET, false,
