@@ -24,6 +24,7 @@ import com.google.gson.JsonObject;
 import io.kamax.matrix.json.GsonUtil;
 import io.kamax.mxisd.Mxisd;
 import io.kamax.mxisd.config.threepid.connector.PhoneGotifyConfig;
+import io.kamax.mxisd.config.threepid.connector.PhonePhonelinkConfig;
 import io.kamax.mxisd.config.threepid.connector.PhoneSmstoolsConfig;
 import io.kamax.mxisd.config.threepid.connector.PhoneTwilioConfig;
 import io.kamax.mxisd.config.threepid.connector.PhoneWebsmsConfig;
@@ -36,26 +37,43 @@ public class BuiltInPhoneConnectorSupplier implements PhoneConnectorSupplier {
 
     @Override
     public Optional<PhoneConnector> apply(PhoneConfig cfg, Mxisd mxisd) {
-        if (StringUtils.equals(BlackholePhoneConnector.ID, cfg.getConnector())) {
+        return create(cfg.getConnector(), cfg);
+    }
+
+    private Optional<PhoneConnector> create(String id, PhoneConfig cfg) {
+        if (StringUtils.equals(PhonePhonelinkConnector.ID, id)) {
+            PhonePhonelinkConfig cCfg = GsonUtil.get().fromJson(cfg.getConnectors().getOrDefault(PhonePhonelinkConnector.ID, new JsonObject()), PhonePhonelinkConfig.class).build();
+            PhoneConnector fallback = null;
+            if (StringUtils.isNotBlank(cCfg.getFallback())) {
+                if (StringUtils.equals(PhonePhonelinkConnector.ID, cCfg.getFallback())) {
+                    throw new IllegalArgumentException("The phonelink connector cannot be its own fallback");
+                }
+                fallback = create(cCfg.getFallback(), cfg).orElseThrow(() ->
+                    new IllegalArgumentException("Unknown fallback phone connector: " + cCfg.getFallback()));
+            }
+            return Optional.of(new PhonePhonelinkConnector(cCfg, fallback));
+        }
+
+        if (StringUtils.equals(BlackholePhoneConnector.ID, id)) {
             return Optional.of(new BlackholePhoneConnector());
         }
 
-        if (StringUtils.equals(PhoneSmsTwilioConnector.ID, cfg.getConnector())) {
+        if (StringUtils.equals(PhoneSmsTwilioConnector.ID, id)) {
             PhoneTwilioConfig cCfg = GsonUtil.get().fromJson(cfg.getConnectors().getOrDefault(PhoneSmsTwilioConnector.ID, new JsonObject()), PhoneTwilioConfig.class);
             return Optional.of(new PhoneSmsTwilioConnector(cCfg));
         }
 
-        if (StringUtils.equals(PhoneSmsWebsmsConnector.ID, cfg.getConnector())) {
+        if (StringUtils.equals(PhoneSmsWebsmsConnector.ID, id)) {
             PhoneWebsmsConfig cCfg = GsonUtil.get().fromJson(cfg.getConnectors().getOrDefault(PhoneSmsWebsmsConnector.ID, new JsonObject()), PhoneWebsmsConfig.class);
             return Optional.of(new PhoneSmsWebsmsConnector(cCfg));
         }
 
-        if (StringUtils.equals(PhoneSmsSmstoolsConnector.ID, cfg.getConnector())) {
+        if (StringUtils.equals(PhoneSmsSmstoolsConnector.ID, id)) {
             PhoneSmstoolsConfig cCfg = GsonUtil.get().fromJson(cfg.getConnectors().getOrDefault(PhoneSmsSmstoolsConnector.ID, new JsonObject()), PhoneSmstoolsConfig.class);
             return Optional.of(new PhoneSmsSmstoolsConnector(cCfg));
         }
 
-        if (StringUtils.equals(PhoneGotifyConnector.ID, cfg.getConnector())) {
+        if (StringUtils.equals(PhoneGotifyConnector.ID, id)) {
             PhoneGotifyConfig cCfg = GsonUtil.get().fromJson(cfg.getConnectors().getOrDefault(PhoneGotifyConnector.ID, new JsonObject()), PhoneGotifyConfig.class);
             return Optional.of(new PhoneGotifyConnector(cCfg));
         }

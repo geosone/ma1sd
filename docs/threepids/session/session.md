@@ -89,6 +89,7 @@ Connectors:
  - [Twilio](../medium/msisdn/twilio-connector.md) with SMS
  - [websms](../medium/msisdn/websms-connector.md) with SMS
  - [smstools](../medium/msisdn/smstools-connector.md) with SMS via SMS Server Tools (smstools-http-api)
+ - [phonelink](../medium/msisdn/phonelink-connector.md): push to the Gotify user who linked the number, SMS failover
  - [Gotify](../medium/msisdn/gotify-connector.md) as a push message for an SMS forwarder
 
 ## Usage
