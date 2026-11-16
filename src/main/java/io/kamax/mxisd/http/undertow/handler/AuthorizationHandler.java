@@ -22,6 +22,7 @@ package io.kamax.mxisd.http.undertow.handler;
 
 import io.kamax.mxisd.auth.AccountManager;
 import io.kamax.mxisd.exception.InvalidCredentialsException;
+import io.kamax.mxisd.http.RequestContext;
 import io.kamax.mxisd.storage.ormlite.dao.AccountDao;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
@@ -53,6 +54,7 @@ public class AuthorizationHandler extends BasicHttpHandler {
             throw new InvalidCredentialsException();
         }
 
+        String userId;
         synchronized (accountManager) {
             AccountDao account = accountManager.findAccount(token);
             if (account == null) {
@@ -66,7 +68,13 @@ public class AuthorizationHandler extends BasicHttpHandler {
                 throw new InvalidCredentialsException();
             }
             log.trace("Access for '{}' allowed", account.getUserId());
+            userId = account.getUserId();
         }
-        child.handleRequest(exchange);
+        String prev = RequestContext.setUserId(userId);
+        try {
+            child.handleRequest(exchange);
+        } finally {
+            RequestContext.setUserId(prev);
+        }
     }
 }

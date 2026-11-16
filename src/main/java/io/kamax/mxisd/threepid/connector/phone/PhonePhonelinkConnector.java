@@ -24,6 +24,7 @@ import io.kamax.matrix.json.GsonUtil;
 import io.kamax.mxisd.config.threepid.connector.PhonePhonelinkConfig;
 import io.kamax.mxisd.exception.InternalServerError;
 import io.kamax.mxisd.exception.NotImplementedException;
+import io.kamax.mxisd.http.RequestContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.config.RequestConfig;
@@ -87,6 +88,8 @@ public class PhonePhonelinkConnector implements PhoneConnector {
         if (StringUtils.isNotBlank(cfg.getFailover())) {
             body.addProperty("failover", cfg.getFailover());
         }
+        // a logged-in Matrix user (v2 request) needs no moderator approval
+        RequestContext.userId().ifPresent(u -> body.addProperty("requester", u));
 
         HttpPost req = new HttpPost(cfg.getUrl());
         req.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + cfg.getToken());
