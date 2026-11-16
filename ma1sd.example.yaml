@@ -141,6 +141,52 @@ threepid:
           # Password for the account
           password: "ThePassword"
 
+#### SMS connector (phone numbers)
+# Pick one connector; all of them are described in
+# docs/threepids/medium/msisdn/*-connector.md
+#
+#    msisdn:
+#      connector: "phonelink"   # phonelink, smstools, gotify, websms, twilio
+#      connectors:
+#        # Push to the Gotify user who linked the number (gotify-phonelink plugin),
+#        # SMS failover if it is not opened in time, SMS at once for unlinked numbers
+#        phonelink:
+#          url: "https://gotify.example.org/plugin/1/custom/PluginToken/send"
+#          token: "SenderToken"       # token of the ma1sd sender in the plugin
+#          title: "Matrix"
+#          priority: 8
+#          failover: "2m"             # optional, capped at the sender's failover_max
+#          timeout: 30                # seconds
+#          fallback: "smstools"       # optional, used when the plugin cannot deliver
+#
+#        # SMS through smstools-http-api (smsd with a GSM modem)
+#        smstools:
+#          url: "https://smsapi.example.org"
+#          username: "ma1sd"
+#          password: "secret"
+#          queue: ""                  # optional smsd queue
+#          timeout: 30
+#
+#        # Message to a Gotify application, delivered by an SMS forwarder app
+#        gotify:
+#          url: "https://gotify.example.org"
+#          token: "AppToken"
+#          priority: 8
+#          title: "SMS to +%RECIPIENT%"
+#          timeout: 30
+#
+#        # websms.com: an API access token, or username and password
+#        websms:
+#          access_token: "myAccessToken"
+#          #username: "user@example.org"
+#          #password: "myPassword"
+#
+#        # Twilio
+#        twilio:
+#          account_sid: "myAccountSid"
+#          auth_token: "myAuthToken"
+#          number: "+123456789"
+
 
 #### MSC2134 (hash lookup)
 
